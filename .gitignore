@@ -1,0 +1,40 @@
+# Local/editor files
+.vscode/
+.idea/
+*.log
+*.tmp
+.DS_Store
+
+# Credentials and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Private or generated biomedical artifacts
+*.csv
+*.dat
+*.cal
+*.3d
+*.pbix
+*.edf
+*.mat
+*.h5
+*.mp4
+*.mov
+*.avi
+*.zip
+private/
+data/
+results/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Arduino build output
+build/
+.pio/
+

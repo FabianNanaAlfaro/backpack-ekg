@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the associated publication and credit the project contributors."
+title: "Backpack EKG: public engineering companion"
+type: software
+authors:
+  - family-names: Nana
+    given-names: Fabian A.
+  - family-names: Razuri-Madrid
+    given-names: Andrea
+  - family-names: Cigaran
+    given-names: Alvaro
+  - family-names: Oviedo
+    given-names: Nadira
+  - family-names: Tello
+    given-names: Bruno
+  - family-names: Gutierrez
+    given-names: Adrian
+  - family-names: Cieza
+    given-names: Leslie Y.
+repository-code: "https://github.com/FabianNanaAlfaro/backpack-ekg"
+url: "https://doi.org/10.1109/MeMeA69746.2026.11537340"
+license: MIT
+version: 1.0.0
+date-released: 2026-09-02
+keywords:
+  - electrocardiography
+  - embedded systems
+  - ESP32
+  - heart-rate estimation
+  - off-grid screening
+  - biomedical instrumentation
+references:
+  - type: article
+    title: "Backpack EKG: An Energy-Autonomous Standalone Three-Lead EKG Platform for Off-Grid Screening Applications"
+    authors:
+      - family-names: Nana
+        given-names: Fabian A.
+      - family-names: Razuri-Madrid
+        given-names: Andrea
+      - family-names: Cigaran
+        given-names: Alvaro
+      - family-names: Oviedo
+        given-names: Nadira
+      - family-names: Tello
+        given-names: Bruno
+      - family-names: Gutierrez
+        given-names: Adrian
+      - family-names: Cieza
+        given-names: Leslie Y.
+    year: 2026
+    doi: "10.1109/MeMeA69746.2026.11537340"
+
