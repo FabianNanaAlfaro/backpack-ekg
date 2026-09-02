@@ -1,0 +1,25 @@
+name: public checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run dependency-free Python tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Compile portable C++ estimator test
+        run: g++ -std=c++17 -Wall -Wextra -pedantic tests/test_bpm_cpp.cpp -o /tmp/test_bpm_cpp && /tmp/test_bpm_cpp
+      - name: Run public-release audit
+        shell: pwsh
+        run: ./scripts/public_audit.ps1
