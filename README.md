@@ -3,6 +3,7 @@
 **An energy-autonomous, standalone three-lead EKG platform for off-grid screening applications.**
 
 [![CI](https://github.com/FabianNanaAlfaro/backpack-ekg/actions/workflows/ci.yml/badge.svg)](https://github.com/FabianNanaAlfaro/backpack-ekg/actions/workflows/ci.yml)
+[![Project site](https://img.shields.io/badge/project%20site-live-24d4d8)](https://fabiannanaalfaro.github.io/backpack-ekg/)
 [![DOI](https://img.shields.io/badge/associated%20paper-10.1109%2FMeMeA69746.2026.11537340-1f6feb)](https://doi.org/10.1109/MeMeA69746.2026.11537340)
 [![License](https://img.shields.io/badge/code-MIT-111827)](LICENSE)
 
@@ -23,6 +24,10 @@ It contains the reusable parts of the project: corrected ESP32 firmware, a porta
 | Offline logging | Optional SD-card CSV stream; generated recordings are ignored by Git |
 | Verification | Simulator-oriented reference table transcribed from the associated paper |
 | Public presentation | Interactive static site in [`site/`](site/) |
+
+## Live project site
+
+Explore the [interactive project gallery](https://fabiannanaalfaro.github.io/backpack-ekg/) with the signal-chain architecture, BPM logic, reproducibility cards, prototype photographs and credits.
 
 ## Start with the code
 
