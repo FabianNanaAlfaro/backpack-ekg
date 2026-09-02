@@ -1,0 +1,147 @@
+#include <Arduino.h>
+#include <XSpaceBioV10.h>
+#include <XSControl.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <SPI.h>
+
+// Define los pines para la pantalla TFT
+#define TFT_CS     17
+#define TFT_RST    21
+#define TFT_DC     22
+
+// Crear un objeto para la pantalla TFT
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+
+// Crear instancias para los módulos y filtros
+XSpaceBioV10Board Board;
+XSFilter Filter1;
+XSFilter Filter2;
+XSFilter Filter3;
+
+// Variables globales para almacenar los valores ECG
+double raw_ecg = 0;
+double filtered_ecg = 0;
+double raw_ecg_2 = 0;
+double filtered_ecg_2 = 0;
+double ecg_2_minus_ecg1 = 0;
+double filtered_ecg_3 = 0;
+
+// Variables para el ploteo
+const int screenWidth = 320;
+const int screenHeight = 240;
+int xPos = 0;
+int prevXPos = 0;
+
+// Posiciones Y anteriores para cada derivación
+int prevYPos1 = screenHeight / 6;
+int prevYPos2 = screenHeight / 2;
+int prevYPos3 = (5 * screenHeight) / 6;
+
+void FilterTask(void *pv) {
+  while (1) {
+    // Leer el voltaje crudo del ECG del primer AD8232
+    raw_ecg = Board.AD8232_GetVoltage(AD8232_XS1);
+    // Aplicar filtro de paso bajo de segundo orden
+    filtered_ecg = Filter1.SecondOrderLPF(raw_ecg, 40, 0.001);
+
+    // Leer el voltaje crudo del ECG del segundo AD8232
+    raw_ecg_2 = Board.AD8232_GetVoltage(AD8232_XS2);
+    // Aplicar filtro de paso bajo de segundo orden
+    filtered_ecg_2 = Filter2.SecondOrderLPF(raw_ecg_2, 40, 0.001);
+
+    // Calcular la tercera derivación como la diferencia entre las dos primeras
+    ecg_2_minus_ecg1 = filtered_ecg_2 - filtered_ecg;
+    filtered_ecg_3 = Filter3.SecondOrderLPF(ecg_2_minus_ecg1, 40, 0.001);
+
+    // Esperar 1 milisegundo antes de la siguiente iteración
+    vTaskDelay(1);
+  }
+  // Nunca se llega aquí
+  vTaskDelete(NULL);
+}
+
+void setup() {
+  // Inicializar comunicación serial
+  Serial.begin(115200);
+
+  // Inicializar el módulo de XSpace Bio v1.0
+  Board.init();
+  
+  // Activar los sensores AD8232
+  Board.AD8232_Wake(AD8232_XS1);
+  Board.AD8232_Wake(AD8232_XS2);
+  
+  // Inicializar la pantalla TFT
+  tft.begin();
+  tft.setRotation(1);  // Rotación para orientación horizontal
+  tft.fillScreen(ILI9341_BLACK);
+  
+  // Dibujar ejes en la pantalla
+  tft.drawLine(0, screenHeight / 3, screenWidth, screenHeight / 3, ILI9341_WHITE); // Eje X para la primera derivación
+  tft.drawLine(0, 2*(screenHeight)/3, screenWidth, 2*(screenHeight)/3, ILI9341_WHITE); // Eje X para la segunda derivación
+  tft.drawLine(0, (screenHeight), screenWidth, (screenHeight), ILI9341_WHITE); // Eje X para la tercera derivación
+
+  // Dibujar leyendas
+    tft.setTextColor(ILI9341_WHITE);
+    tft.setTextSize(1);
+    tft.setCursor(0, screenHeight / 3 - 10);
+    tft.print("Derivacion 1");
+    tft.setCursor(0, (2*screenHeight) / 3 - 10);
+    tft.print("Derivacion 2");
+    tft.setCursor(0, (4 * screenHeight) / 4 - 10);
+    tft.print("Derivacion 3");
+
+  // Crear la tarea de filtrado
+  xTaskCreate(FilterTask, "FilterTask", 3000, NULL, 1, NULL);
+}
+
+void loop() {
+  // Mapeo de los valores filtrados de las derivaciones en la pantalla TFT
+  int yPos1 = map(filtered_ecg * 15000, -11000, 2000, (screenHeight / 3) + 10, (screenHeight / 3) - 10);  // Derivación 1
+  int yPos2 = map(filtered_ecg_2 * 15000, -11000, 2000, ((3*screenHeight) / 4) + 10, ((3*screenHeight) / 4) - 10);  // Derivación 2
+  int yPos3 = map(filtered_ecg_3 * 15000, -11000, 2000, (4 * screenHeight / 4) + 10, (4 * screenHeight / 4) - 10);  // Derivación 3
+
+  // Dibujar líneas desde las posiciones anteriores a las nuevas posiciones
+  tft.drawLine(prevXPos, prevYPos1, xPos, yPos1, ILI9341_RED);  // Derivación 1
+  tft.drawLine(prevXPos, prevYPos2, xPos, yPos2, ILI9341_GREEN);  // Derivación 2
+  tft.drawLine(prevXPos, prevYPos3, xPos, yPos3, ILI9341_BLUE);  // Derivación 3
+
+  // Actualizar las posiciones anteriores
+  prevXPos = xPos;
+  prevYPos1 = yPos1;
+  prevYPos2 = yPos2;
+  prevYPos3 = yPos3;
+
+  // Mover la posición x
+  xPos++;
+  if (xPos >= screenWidth) {
+    xPos = 0;
+    prevXPos = 0;
+    tft.fillScreen(ILI9341_BLACK);
+    tft.drawLine(0, screenHeight / 3, screenWidth, screenHeight / 3, ILI9341_WHITE); // Eje X para la primera derivación
+    tft.drawLine(0, 2*(screenHeight)/3, screenWidth, 2*(screenHeight)/3, ILI9341_WHITE); // Eje X para la segunda derivación
+    tft.drawLine(0, (screenHeight), screenWidth, (screenHeight), ILI9341_WHITE); // Eje X para la tercera derivación
+    
+    // Dibujar leyendas
+    tft.setTextColor(ILI9341_WHITE);
+    tft.setTextSize(1);
+    tft.setCursor(0, screenHeight / 3 - 10);
+    tft.print("Derivacion 1");
+    tft.setCursor(0, (2*screenHeight) / 3 - 10);
+    tft.print("Derivacion 2");
+    tft.setCursor(0, (4 * screenHeight) / 4 - 10);
+    tft.print("Derivacion 3");
+    delay(50);
+  }
+
+  // Imprimir valores en el monitor serial para depuración
+  Serial.print(filtered_ecg, 6);
+  Serial.print(" ");
+  Serial.print(filtered_ecg_2, 6);
+  Serial.print(" ");
+  Serial.println(filtered_ecg_3, 6);
+
+  // Pausar el loop por 5 milisegundos para una mejor tasa de refresco
+  delay(5);
+}
